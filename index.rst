@@ -6,16 +6,15 @@
 Welcome to MShadow-Notes's documentation!
 =========================================
 
+
 .. toctree::
    :maxdepth: 3
-   :caption: Tensor:
 
    tensor.md
    expression.md
    expr_engine-inl.md
    packet-inl.md
    tensor_blob.md
-
 
 Indices and tables
 ==================
