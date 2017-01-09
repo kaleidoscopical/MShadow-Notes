@@ -8,14 +8,14 @@ transforme to normal fixed dimension tensor.
 - TBlob
 
 
-## 1. TShape
+## TShape
 
 `TShape` is a dynamic shape class (not a template class) that can hold shape of arbitrary dimension.
 
 The shape will be stored in `data_stack_` when dimension is smaller than `kStackCache`.
 When it is bigger, it will be stored in `data_heap_`.
 
-### 1.1 Member Variables
+### Member Variables
 
 - `kStackCache`: size of space in stack.
 - `ndim_`: number of dimensions of the shape.
@@ -31,9 +31,9 @@ index_t data_stack_[kStackCache];
 index_t *data_heap_;
 ```
 
-### 1.2 Constructors
+### Constructors
 
-#### 1.2.1 Default Constructor
+#### Default Constructor
 
 The default constructor can be a good way to know which variable is required 
 to be initialized. 
@@ -52,7 +52,7 @@ TShape()
       data_heap_(NULL) {}
 ```
 
-#### 1.2.2 Explicit Constructor
+#### Explicit Constructor
 
 The explicit constructor constructs an "all-one" `TShape` with given dimensions.
 
@@ -71,7 +71,7 @@ explicit TShape(index_t ndim)
 }
 ```
 
-#### 1.2.3 Constructor from TShape
+#### Constructor from TShape
 
 The idea is same as the explicit constructor. The only difference is it is an itentical
 copy by using `std::copy()`.
@@ -91,7 +91,7 @@ TShape(const TShape &s)
 }
 ```
 
-#### 1.2.4 Constructor from RandomAccessIterator
+#### Constructor from RandomAccessIterator
 
 The beginning of this constructor is same as a default constructor, the 
 difference lies in the calling of member function `CopyFrom()`.
@@ -139,7 +139,7 @@ inline index_t *data() {
 }
 ```
 
-#### 1.2.5 Move Constructor from TShape
+#### Move Constructor from TShape
 
 According to the property of move constructor, we first transfer the member variables
 from input arguments to the new `TShape`. Then, the original pointer of `s.data_heap_`
@@ -158,7 +158,7 @@ TShape(TShape &&s)
 }
 ```
 
-#### 1.2.6 Move Constructor from Shape
+#### Move Constructor from Shape
 
 Similar to constructor from `RandomAccessIterator`, the beginning of this constructor 
 is same as a default constructor, the difference lies in the calling of member function 
@@ -178,7 +178,7 @@ TShape(Shape<dim> &&s)
 }
 ```
 
-#### 1.2.7 Destructor
+#### Destructor
 
 Since `data_heap_` is the only member variables with a pointer-related type, we explicitly
 delete it in destructor.
@@ -190,11 +190,11 @@ delete it in destructor.
 }
 ```
 
-### 1.3 Overloaded Operators
+### Overloaded Operators
 
-#### 1.3.1 Overloaded `=`
+#### Overloaded `=`
 
-##### 1.3.1.1 Overloaded from `Tshape`
+##### Overloaded from `Tshape`
 
 It first sets the shape of itself to `shape.ndim_`, then assigns the first address of data
 (`data_stack_` or `data_heap_`) to a temp variable `src`. At last, it copies the contents
@@ -209,7 +209,7 @@ inline TShape &operator=(const TShape &shape) {
 }
 ```
 
-##### 1.3.1.2 Overloaded from `std::vector`
+##### Overloaded from `std::vector`
 
 The `CopyFrom()` function takes in two iterators as its input, which is suitable for 
 the two variables `shape.begin()` and `shape.end()`. It first set the dimension 
@@ -223,7 +223,7 @@ inline TShape &operator=(const std::vector<index_t> &shape) {
 }
 ```
 
-##### 1.3.1.3 Overloaded from `Shape`
+##### Overloaded from `Shape`
 
 It first sets the shape of itself to `dim`. Then, it definite a pointer pointing to 
 `data_stack_` or `data_heap_` by comparing `dim` to `kStackCache`. At last, it just
@@ -241,7 +241,7 @@ inline TShape &operator=(const Shape<dim> &shape) {
 }
 ```
 
-#### 1.3.2 Overloaded `[]`
+#### Overloaded `[]`
 
 It returns the dimension by calling `data()` to fetch the first
 address, and uses operator `[]` to reach the value.
@@ -260,9 +260,9 @@ inline const index_t &operator[](index_t i) const {
 }
 ```
 
-#### 1.3.3 Overloaded `==`
+#### Overloaded `==`
 
-##### 1.3.3.1 Overloaded from `TShape`
+##### Overloaded from `TShape`
 
 It returns whether two shape equals.
 
@@ -282,7 +282,7 @@ inline bool operator==(const TShape &s) const {
 }
 ```
 
-##### 1.3.3.2 Overloaded from `Shape`
+##### Overloaded from `Shape`
 
 It returns whether two shape equals.
 
@@ -298,9 +298,9 @@ inline bool operator==(const Shape<dim> &s) const {
 }
 ```
 
-#### 1.3.4 Overloaded `!=`
+#### Overloaded `!=`
 
-##### 1.3.4.1 Overloaded from `TShape`
+##### Overloaded from `TShape`
 
 It returns whether two shape not equals.
 
@@ -310,7 +310,7 @@ inline bool operator!=(const TShape &s) const {
 }
 ```
 
-##### 1.3.4.2 Overloaded from `Shape`
+##### Overloaded from `Shape`
 
 It returns whether two shape not equals.
 
@@ -321,7 +321,7 @@ inline bool operator!=(const Shape<dim> &s) const {
 }
 ```
 
-#### 1.3.5 Overloaded from `<<`
+#### Overloaded from `<<`
 
 It outputs a python-style tuple as in the class `Shape`.
 
@@ -339,7 +339,7 @@ inline std::ostream &operator<<(std::ostream &os, const TShape &shape) {
 }
 ```
 
-#### 1.3.6 Overloaded from `>>`
+#### Overloaded from `>>`
 
 It reads the input `shape` from the istream and assigns it to a `TShape` type.
 
@@ -459,9 +459,9 @@ int main() {
 // (3,4,a)    ->    (3,4)
 ```
 
-### 1.4 Member Functions
+### Member Functions
 
-#### 1.4.1 CopyFrom
+#### CopyFrom
 
 The `CopyFrom()` function first set the dimension of shape by calling `SetDim()`
 with argument equaling the difference between iterators `begin` and `end`.
@@ -477,7 +477,7 @@ inline void CopyFrom(RandomAccessIterator begin,
 }
 ```
 
-#### 1.4.2 data
+#### data
 
 It returns the data content of the `TShape`. 
 
@@ -499,7 +499,7 @@ inline index_t *data() {
 }
 ```
 
-#### 1.4.3 ndim
+#### ndim
 
 It simply returns the private member variable `ndim_`.
 
@@ -509,7 +509,7 @@ inline index_t ndim(void) const {
 }
 ``` 
 
-#### 1.4.4 Size
+#### Size
 
 It returns the multiplication of the values from all dimensions.
 
@@ -527,7 +527,7 @@ inline size_t Size(void) const {
 }
 ```
 
-#### 1.4.5 FlatTo2D
+#### FlatTo2D
 
 It flattens the higher dimension of `TShape` to second dimension, returns a 2D `shape`.
 
@@ -546,7 +546,7 @@ inline Shape<2> FlatTo2D(void) const {
 }
 ```
 
-#### 1.4.6 FlatTo3D
+#### FlatTo3D
 
 It flattens the shape into three parts: `[0, axis_begin)`, `[axis_begin, axis_end]` 
 , and `(axis_end, ndim)`.
@@ -582,7 +582,7 @@ inline Shape<3> FlatTo3D(index_t axis) const {
 }
 ```
 
-### 1.4.7 ProdShape
+### ProdShape
 
 It returns product of shape in `[dimstart,dimend)`.
 
@@ -597,7 +597,7 @@ inline index_t ProdShape(int dimstart, int dimend) const {
 }
 ```
 
-### 1.4.8 get
+### get
 
 It returns the class `shape`, which is a component of `Tensor`.
 
@@ -614,7 +614,7 @@ inline Shape<dim> get(void) const {
 }
 ```
 
-### 1.4.9 SetDim (`private`)
+### SetDim (`private`)
 
 Not only does it set the value of `ndim_`, but it decides the usage of `data_stack_` or 
 `data_heap_`.
