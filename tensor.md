@@ -10,7 +10,7 @@
 - Tensor `:public TRValue<Tensor<Device, dimension, DType>, Device, dimension, DType>`
 - Tensor<Device, 1, DType> `:public TRValue<Tensor<Device, 1, DType>, Device, 1, DType>`
 
-## 1. CPU and GPU
+## CPU and GPU
 
 The struct `cpu` and `gpu` here is to guarantee the success of checkings before final evaluation.
 
@@ -31,11 +31,11 @@ struct gpu {
 };
 ```
 
-## 2. Shape
+## Shape
 
 The struct `Shape` here is to provide a flexible component for the construction of class Tensor.
 
-### 2.1 Member variables
+### Member variables
 
 The `kDimension` defines the dimension of current shape, while the `kSubdim` can be used to infer 
 the lowest dimension in the Tensor.
@@ -52,7 +52,7 @@ With the information of `kDimension`, we can construct an unsigned array `shape_
 index_t shape_[kDimension]; 
 ```
 
-### 2.2 Constructor
+### Constructor
 
 After the difinition of three member variables, we can write the constructor to create a struct `Shape`.
 
@@ -71,7 +71,7 @@ MSHADOW_XINLINE Shape(const Shape<kDimension> &s) {
 The code ```const Shape<kDimension> &s``` as a variable of constructor makes sure that only struct `Shape` with
 same `kDimension` can be allowed to initiate the new ones.
 
-### 2.3 Overloaded Operator
+### Overloaded Operator
 
 Operator `[]` is overloaded to return the sub-dimension of required index.
 
@@ -129,9 +129,9 @@ inline std::ostream &operator<<(std::ostream &os, const Shape<ndim> &shape) {
 
 
 
-### 2.4 Member Functions
+### Member Functions
 
-#### 2.4.1 Size
+#### Size
 
 The `size` function returns the product of all sub-dimensions. e.g. `(5,3,6) -> 90`
 
@@ -146,7 +146,7 @@ MSHADOW_XINLINE size_t Size(void) const {
 }
 ```
 
-#### 2.4.2 FlatTo1D
+#### FlatTo1D
 
 The `FlatTo1D` function returns a `Shape` with `kDimension=1` and its dimension equals to 
 the product of original `Shape`. e.g. `(5,3,6) -> (90)`
@@ -159,7 +159,7 @@ MSHADOW_XINLINE Shape<1> FlatTo1D(void) const {
 }
 ```
 
-#### 2.4.3 FlatTo2D
+#### FlatTo2D
 
 The `FlatTo2D` function returns a `Shape` with `kDimension=2` and its first dimension equals
 to the product of original `Shape` instead of the lowest dimension, which is put into its second
@@ -184,7 +184,7 @@ MSHADOW_XINLINE Shape<2> FlatTo2D(void) const {
 }
 ```
 
-#### 2.4.4 ProdShape
+#### ProdShape
 
 The function `ProdShape` returns the product of shape in range `[dimstart, dimend)`.
 
@@ -199,7 +199,7 @@ MSHADOW_XINLINE index_t ProdShape(int dimstart, int dimend) const {
 }
 ```
 
-#### 2.4.5 SubShape
+#### SubShape
 
 The function `SubShape` return a new shape, whose `kDimension` is the minus `1` of original
 one. e.g. `(3,2,6,4) -> (2,6,4)`
@@ -220,7 +220,7 @@ MSHADOW_XINLINE Shape<kSubdim> SubShape(void) const {
 }
 ```
 
-#### 2.4.6 Slice
+#### Slice
 
 The function `Slice` return a new shape, whose `kDimension` is the `dimend-dimstart` of original
 one. 
@@ -247,7 +247,7 @@ cout << sss <<endl;
 // output (5,6,7)
 ```
 
-### 2.5 Useful Construction
+### Useful Construction
 
 According to the `usage` instruction above, we introduce several construction functions
 for struct `Shape` as APIs. 
@@ -285,7 +285,7 @@ MSHADOW_XINLINE Shape<5> Shape5(index_t s0, index_t s1, index_t s2,
 }
 ```
 
-## 3. Stream
+## Stream
 
 The `Stream` here is only a dummy implementation for CPU, we left it for further discussion when
 we run into the implementation of GPU.
@@ -310,7 +310,7 @@ struct Stream {
 };
 ```
 
-## 4. TRValue
+## TRValue
 `:public expr::RValueExp<Container, DType>`
 
 This is Tensor RValue, which is also the super type of all kinds of possible tensors.
@@ -326,7 +326,7 @@ struct TRValue: public expr::RValueExp<Container, DType> {
 };
 ```
 
-## 5. Tensor
+## Tensor
 `:public TRValue<Tensor<Device, dimension, DType>, Device, dimension, DType>`
 
 The struct `Tensor` is the key element in MShadow.
@@ -349,7 +349,7 @@ struct Tensor: public TRValue<Tensor<Device, dimension, DType>, Device, dimensio
 // Trival Usage
 Tensor<cpu, 3> ts(data, Shape3(2,5,2));
 ```
-### 5.1 Member Variables
+### Member Variables
 
 The variable `kDevCPU` indicates in which type of device the data are stored. And the `kSubdim` is
 same as in the struct `Shape`.
@@ -381,7 +381,7 @@ index_t stride_;
 Stream<Device> *stream_;
 ```
 
-### 5.2 Constructor
+### Constructor
 
 ```warning
 It is worth noting that the `stride_` is default initialized to be the lowest dimension of 
@@ -409,9 +409,9 @@ MSHADOW_XINLINE Tensor(DType *dptr, const Shape<dimension> &shape, index_t strid
     : dptr_(dptr), shape_(shape), stride_(stride), stream_(stream) {}
 ```
 
-### 5.3 Member Functions
+### Member Functions
 
-#### 5.3.1 MSize and MemSize
+#### MSize and MemSize
 
 The function `MSize` returns the memory cost of specified tensor, including the aligned x dimension
 (so it starts with the value of largest dimension of tensor). While the function `MemSize` returns the 
@@ -433,7 +433,7 @@ MSHADOW_XINLINE size_t MemSize(void) const {
 }
 ```
 
-#### 5.3.2 size
+#### size
 
 The function `size` return the `shape` of the specified sub-dimension. 
 
@@ -443,7 +443,7 @@ MSHADOW_XINLINE index_t size(index_t idx) const {
 }
 ```
 
-#### 5.3.3 FlatTo1D and FlatTo2D
+#### FlatTo1D and FlatTo2D
 
 The functions `FlatTo1D` and `FlatTo2D` return a new tensor with same data (unchanged `dptr_`), 
 but different shape (refer to `FlatTo1D` and `FlatTo2D` in the context of `Shape`).
@@ -458,7 +458,7 @@ MSHADOW_XINLINE Tensor<Device, 2, DType> FlatTo2D(void) const {
 }
 ```
 
-#### 5.3.4 Slice
+#### Slice
 
 The function `Slice` returns a new Tensor, which is a subset of the highest dimension.
 e.g. `(128,3,224,224) -> (64,3,224,224)`
@@ -472,9 +472,9 @@ Slice(index_t begin, index_t end) const {
 }
 ```
 
-### 5.4 Overloaded Operators
+### Overloaded Operators
 
-#### 5.4.1 Operator `[]`
+#### Operator `[]`
 The operator `[]` is overloaded to return the corresponding index in the highest dimension of `Tensor`.
 
 The code `dptr_ + this->MemSize<1>() * idx` is to fetch the `idx` sub-tensor in `Tensor`, e.g. `(128,3,224,224)[5] -> 5-th (3,224,224)`
@@ -485,7 +485,7 @@ MSHADOW_XINLINE Tensor<Device, kSubdim, DType> operator[](index_t idx) const {
 }
 ```
 
-#### 5.4.2 Operator `=`
+#### Operator `=`
 The operator `=` is overloaded to be assignment operator when the `rhs` (right hand side) is also a `Tensor` variable.
 
 ```c++
@@ -522,9 +522,9 @@ It is worth noting that there are several other assignment related operators are
 but in the grandfather class `RValueExp`. We will do analysis until reaching there.
 
 
-## 6. Missing Explanations
+## Missing Explanations
 
-### 6.1 the usage of ```#pragma unroll```:
+### the usage of ```#pragma unroll```:
 
 if the following ```for loop``` has a constant number of loops, the ```for loop``` will be expanded
 in the compile time to accelerate the process.
@@ -534,9 +534,9 @@ Otherwise, if the number of loop is undetermined, it will keep itself same as co
 e.g. ```for(i = 1; i < n; i++){...};``` will be the same. Since computer will not be able to 
 know the exact value of `n` until the computation time.
 
-## 7. Missing Component
+## Missing Component
 
-### 7.1 Shape::ConvertLayout
+### Shape::ConvertLayout
 
 `ConvertLayout` is left to the discussion of MxNet, which uses it to do `convolution`.
 
@@ -607,7 +607,7 @@ inline Shape<5> ConvertLayout(const Shape<5>& src, int src_layout, int dst_layou
 }
 ```
 
-### 7.2 Tensor:set_stream and Tensor::CheckContiguous
+### Tensor:set_stream and Tensor::CheckContiguous
 
 These two functions are heavily related to GPU implementation, so they are left for further discussion.
 
@@ -621,7 +621,7 @@ MSHADOW_XINLINE bool CheckContiguous(void) const {
 }
 ```
 
-### 7.3 Tensor<Device, 1, DType>
+### Tensor<Device, 1, DType>
 
 We must respecialize struct `Tensor` in the `1D` situation, since the implementation of 
 overloaded operator `[]` is different.
