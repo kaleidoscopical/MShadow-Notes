@@ -13,7 +13,7 @@
 - ShapeCheck
 - ExpEngine
 
-## 1. MakeTensorExp
+## MakeTensorExp
 
 
 `: public Exp<MakeTensorExp<SubType, SrcExp, dim, DType>, DType, type::kChainer>`
@@ -31,13 +31,13 @@ struct MakeTensorExp : public Exp<MakeTensorExp<SubType, SrcExp, dim, DType>, DT
 };
 ```
 
-## 2. Plan
+## Plan
 
 The class `Plan` is the class to provide `Eval()` function, which designs the way to do actual evaluation.
 
 
 
-### 2.1 Plan Declaration
+### Plan Declaration
 
 The template `Plan` should include the `ExpType`, since its major purpose is to evaluate an expression, and `DType`
 to guide the evaluation process.
@@ -50,7 +50,7 @@ class Plan {
 };
 ```
 
-### 2.2 Tensor Plan
+### Tensor Plan
 
 The tensor plan includes two member variables `*dptr_` and `stride_` to make sure the program can fetch
 expected value by `dptr_[y * stride_ + x]`.
@@ -103,7 +103,7 @@ class Plan<Tensor<Device, 1, DType>, DType> {
 };
 ```
 
-### 2.3 Scalar Plan
+### Scalar Plan
 
 The usage of scalar plan includes
 
@@ -125,7 +125,7 @@ class Plan<ScalarExp<DType>, DType> {
 };
 ```
 
-### 2.4 Typecast Plan
+### Typecast Plan
 
 The usage of typecast expression includes
 
@@ -149,7 +149,7 @@ class Plan<TypecastExp<DstDType, SrcDType, EType, etype>, DstDType> {
 };
 ```
 
-### 2.5 Ternary Plan
+### Ternary Plan
 
 The usage of ternary plan includes
 
@@ -175,7 +175,7 @@ class Plan<TernaryMapExp<OP, TA, TB, TC, DType, etype>, DType> {
 };
 ```
 
-### 2.6 Binary Plan
+### Binary Plan
 
 The usage of binary plan includes
 
@@ -200,7 +200,7 @@ class Plan<BinaryMapExp<OP, TA, TB, DType, etype>, DType> {
 };
 ```
 
-### 2.7 Unary Plan
+### Unary Plan
 
 The usage of unary plan includes
 
@@ -223,7 +223,7 @@ class Plan<UnaryMapExp<OP, TA, DType, etype>, DType> {
 };
 ```
 
-### 2.8 MakeTensorExp Plan
+### MakeTensorExp Plan
 
 Since the expression type `MakeTensorExp` is only a base class of several extension functions (will be discussed
 in `./extensions/`), the MakeTensorExp plan also only consider its input `Plan` as its member variables, and use the 
@@ -251,7 +251,7 @@ struct Plan<MakeTensorExp<SubType, SrcExp, dim, DType>, DType> {
 ```
 
 
-### 2.9 Transpose Plan
+### Transpose Plan
 
 The usage of transpose plan includes
 
@@ -277,11 +277,11 @@ class Plan<TransposeExp<EType, DType>, DType> {
 ```
 
 
-## 3. MakePlan
+## MakePlan
 
 The major purpose of `MakePlan` is to transform an Expression to its corresponding `Plan`. 
 
-### 3.1 Tensor MakePlan
+### Tensor MakePlan
 
 The input variable of Tensor MakePlan is `RValueExp<T, DType> &e`, which is the grandfather class of 
 `Tensor`. The reason of such design choice is compatibility, since a father class can safely refer to 
@@ -294,7 +294,7 @@ inline Plan<T, DType> MakePlan(const RValueExp<T, DType> &e) {
 }
 ```
 
-### 3.2 Scalar MakePlan
+### Scalar MakePlan
 
 The Scalar MakePlan takes in a `ScalarExp`, and uses its member variable `scalar_` to initiate
 `Plan<ScalarExp<DType>, DType>`.
@@ -306,7 +306,7 @@ inline Plan<ScalarExp<DType>, DType> MakePlan(const ScalarExp<DType> &e) {
 }
 ```
 
-### 3.3 Typecast MakePlan
+### Typecast MakePlan
 
 Since the Typecast Plan only use the `Eval()` function of original plan to do `Eval()` of itself,
 with a enforced typecast at the end, the only thing Typecast MakePlan needs to do is input a plan
@@ -320,7 +320,7 @@ MakePlan(const TypecastExp<DstDType, SrcDType, EType, etype> &e) {
 }
 ```
 
-### 3.4 Ternary MakePlan
+### Ternary MakePlan
 
 Since the Ternary Plan require three Plans to do the evaluation, the Ternary MakePlan just
 provides the plan of its components.
@@ -340,7 +340,7 @@ MakePlan(const TernaryMapExp<OP, TA, TB, TC, DType, etype> &e) {
 }
 ```
 
-### 3.5 Binary MakePlan
+### Binary MakePlan
 
 Since the Binary Plan require two Plans to do the evaluation, the Biary MakePlan just
 provides the plan of its components.
@@ -360,7 +360,7 @@ MakePlan(const BinaryMapExp<OP, TA, TB, DType, etype> &e) {
 }
 ```
 
-### 3.6 Unary MakePlan
+### Unary MakePlan
 
 Since the Unary Plan require one Plan to do the evaluation, the Unary MakePlan just
 provides the plan of its component.
@@ -374,7 +374,7 @@ MakePlan(const UnaryMapExp<OP, TA, DType, etype> &e) {
 }
 ```
 
-### 3.7 MakeTensorExp MakePlan
+### MakeTensorExp MakePlan
 
 In `2.8`, we have claimed that the expression type MakeTensorExp is only a base class of several extension functions 
 (will be discussed in ./extensions/), and use the `Eval()` function of input plan as `Eval()` function of itself.
@@ -391,7 +391,7 @@ MakePlan(const MakeTensorExp<T, SrcExp, dim, DType> &e) {
 }
 ```
 
-### 3.8 Transpose MakePlan
+### Transpose MakePlan
 
 Since the Transpose Plan only use the `Eval()` function of original plan to do `Eval()` of itself,
 with a interchage of `y` and `x`, the only thing Transpose MakePlan needs to do is input a plan
@@ -406,7 +406,7 @@ MakePlan(const TransposeExp<T, DType> &e) {
 }
 ```
 
-## 4. ExpInfo
+## ExpInfo
 
 `ExpInfo` is a template struct providing expression infomation to help the `TypeCheck`.
 
@@ -514,7 +514,7 @@ struct ExpInfo<MakeTensorExp<T, SrcExp, dim, DType> > {
 };
 ```
 
-## 5. TypeCheck
+## TypeCheck
 
 `TypeCheck` is a template to do type checking. The checking happens in compile time.
 
@@ -557,7 +557,7 @@ struct TypeCheckPass<true> {
 };
 ```
 
-## 6. StreamInfo
+## StreamInfo
 
 The `StreamInfo` returns the stream of a `Tensor` in its stored `Device`.
 
@@ -579,12 +579,12 @@ struct StreamInfo<Device, Tensor<Device, dim, DType> > {
 };
 ```
 
-## 7 ShapeCheck
+## ShapeCheck
 
 `ShapeCheck` is a runtime shape checking template to get the shape of an expression, 
 reporting error if shape mismatch
 
-### 7.1 Declaration
+### Declaration
 
 ```c++
 template<int dim, typename E>
@@ -593,7 +593,7 @@ struct ShapeCheck {
 };
 ```
 
-### 7.2 Tensor ShapeCheck
+### Tensor ShapeCheck
 
 The Tensor ShapeCheck simply returns its shape.
 
@@ -606,7 +606,7 @@ struct ShapeCheck<dim, Tensor<Device, dim, DType> > {
 };
 ```
 
-### 7.3 Scalar ShapeCheck
+### Scalar ShapeCheck
 
 The Scalar ShapeCheck returns a same `Shape` of provided `dim`, but all of the dimension equal to `0`.
 
@@ -623,7 +623,7 @@ struct ShapeCheck<dim, ScalarExp<DType> > {
 };
 ```
 
-### 7.4 Typecast ShapeCheck
+### Typecast ShapeCheck
 
 The Typecast ShapeCheck simply conducts in a way that calls the original `Check()` of the expression 
 wishing to cast it type.
@@ -638,7 +638,7 @@ struct ShapeCheck<dim, TypecastExp<DstDType, SrcDType, EType, etype> > {
 };
 ```
 
-### 7.5 Ternary ShapeCheck
+### Ternary ShapeCheck
 
 The Ternary ShapeCheck first fetch the check results of its three variable expressions.
 Then, it couducts a explicit checking to make sure all of the expressions have same shape.
@@ -660,7 +660,7 @@ struct ShapeCheck<dim, TernaryMapExp<OP, TA, TB, TC, DType, etype> > {
 };
 ```
 
-### 7.6 Binary ShapeCheck
+### Binary ShapeCheck
 
 The Binary ShapeCheck first fetch the check results of its two variable expressions.
 Then, it couducts a explicit checking to make sure all of the expressions have same shape.
@@ -682,7 +682,7 @@ struct ShapeCheck<dim, BinaryMapExp<OP, TA, TB, DType, etype> > {
 };
 ```
 
-### 7.7 Unary ShapeCheck
+### Unary ShapeCheck
 
 For Unary ShapeCheck, it just fetch the check result of its variable expressions and return it.
 
@@ -696,7 +696,7 @@ struct ShapeCheck<dim, UnaryMapExp<OP, TA, DType, etype> > {
 };
 ```
 
-### 7.8 MakeTensorExp ShapeCheck
+### MakeTensorExp ShapeCheck
 
 MakeTensorExp ShapeCheck simply use the member variable `shape_` of `MakeTensorExp` as its return.
 
@@ -714,7 +714,7 @@ struct ShapeCheck<dim, MakeTensorExp<T, SrcExp, dim, DType> > {
 };
 ```
 
-### 7.9 Transpose ShapeCheck
+### Transpose ShapeCheck
 
 Transpose ShapeCheck fetchs the checked shape of expression to be transposed, and simply return the
 swaped lowest two dimensions.
@@ -735,7 +735,7 @@ struct ShapeCheck<dim, TransposeExp<E, DType> > {
 };
 ```
 
-## 8. ExpEngine
+## ExpEngine
 
 `ExpEngine` is a struct with several overloaded `Eval()` functions, always called by the assignment
 related functions in `RValueExp` to dispatch simple operations.
