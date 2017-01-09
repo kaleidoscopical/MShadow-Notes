@@ -46,7 +46,7 @@ struct AlignBytes {
 };
 ```
 
-## 1. Packet
+## Packet
 
 `Packet` is a struct that is designed to handle the evaluation process of expression,
 in a scalar level, by using SSE2 instructions set for better efficiency. 
@@ -55,7 +55,7 @@ It has three different basic type `<DType, kPlain`> for standard C computation,
 `<float, kSSE2>` for float SSE2 optimization, and `<double, kSSE2>` for double
 SSE2 optimization. All of them will be described in parallel.
 
-### 1.1 Member Variables
+### Member Variables
 
 - `kSize`: number of float can be handled as a vector
 - `data_`: the internal data that is loaded from a pointer pointing to a built-in scalar type
@@ -86,7 +86,7 @@ __m128d data_;
 
 The vectorization makes `4` floats or `2` doubles looks like a `scalar`.
 
-### 1.2 Constructor
+### Constructor
 
 Since `Packet` only has `2` member variables, and one of them is static const type, 
 we only need initiate the `data_` in constructor.
@@ -105,7 +105,7 @@ Packet(void) {}
 explicit Packet(__m128d data) : data_(data) {}
 ```
 
-### 1.3 Member Functions
+### Member Functions
 
 The member functions in `<DType, kPlain>` just use the simple C / C++ code to realize same 
 function in `<float/double, kSSE2>`.
@@ -187,9 +187,9 @@ our context and has heave extra SSE2 instructions.
 ``` 
 
 
-### 1.4 Overloaded Operators
+### Overloaded Operators
 
-#### 1.4.1 `=` operator
+#### `=` operator
 
 The `=` operator simply change the value of `data_` to the value in right hand side, and 
 return itself by `*this`.
@@ -214,7 +214,7 @@ MSHADOW_CINLINE Packet<double, kSSE2>& operator=(double s) {
 }
 ```
 
-#### 1.4.2 `+` / `-` / `*` / `/` operators
+#### `+` / `-` / `*` / `/` operators
 
 For Plain version:
 
@@ -289,11 +289,11 @@ MSHADOW_CINLINE Packet<double, kSSE2> operator/(const Packet<double, kSSE2>& lhs
 ```
 
 
-## 2. Alignment
+## Alignment
 
 To make fully use of SSE2 instructions set, Alignment is important in the context.
 
-### 2.1 Aligned and Aligned Free
+### Aligned and Aligned Free
 
 `AlignedMallocPitch()` is an analog to `cudaMallocPitch()`, which allocates a aligned
 space with `num_line * lspace` cells.
@@ -343,7 +343,7 @@ inline void AlignedFree(void *ptr) {
 }
 ```
 
-### 2.2 CheckAlign
+### CheckAlign
 
 `CheckAlign` is designed to make sure a value or the address of a pointer can be divided by 16.
 
@@ -366,7 +366,7 @@ inline bool CheckAlign(void *ptr) {
 }
 ```
 
-### 2.3 UpperAlign and LowerAlign
+### UpperAlign and LowerAlign
 
 `UpperAlign` and `LowerAlign` return the required loop times to execute a string with `size`.
 
@@ -391,7 +391,7 @@ inline index_t LowerAlign(index_t size) {
 }
 ```
 
-## 3. Packet Operator
+## Packet Operator
 
 `PacketOp` is a struct same as the operator defined in the `op` namespace. The different choice of 
 `PacketOp` is trigger by the given typename `OP`.
@@ -458,7 +458,7 @@ struct PacketOp {
 
 
 
-## 4. Saver
+## Saver
 
 `Saver` is the struct that calls its member function `Save()` to do actual evaluation and saving.
 
@@ -490,12 +490,12 @@ struct Saver<sv::saveto, TFloat, Arch> {
 };
 ```
 
-## 5. Packet Plan
+## Packet Plan
 
 Same as the class `Plan` defined in `expr_engine-inl.h`, the class `PacketPlan` is the class to provide
 `Eval()` function for `Packet`, which is the way to do actual evaluation.
 
-### 5.1 Declaration
+### Declaration
 
 According to the declaration, a `PacketPlan` contains two member functions `EvalPacket()` which use `SSE` optimization,
 and `Eval()` to do common computation as in `Plan`.
@@ -512,7 +512,7 @@ class PacketPlan {
 };
 ```
 
-### 5.2 Tensor PacketPlan
+### Tensor PacketPlan
 
 The usage of `EvalPacket()` is to provide the data according to `dptr_[y * stride_ + x]`
 
@@ -535,7 +535,7 @@ class PacketPlan<Tensor<Device, dim, DType>, DType, Arch> {
 };
 ```
 
-### 5.3 Scalar PacketPlan
+### Scalar PacketPlan
 
 The usage of `EvalPacket()` is to provide `scalar_` for every `x` and `y`.
 
@@ -556,7 +556,7 @@ class PacketPlan<ScalarExp<DType>, DType, Arch> {
 };
 ```
 
-### 5.4 Binary PacketPlan
+### Binary PacketPlan
 
 The usage of `EvalPacket()` is to perform `EvalPacket()` for `lhs_` and `rhs_` respectively, and 
 use the pre-defined `OP` to do the combinational evaluation.
@@ -580,7 +580,7 @@ class PacketPlan<BinaryMapExp<OP, TA, TB, DType, etype>, DType, Arch> {
 };
 ```
 
-### 5.5 Unary PacketPlan
+### Unary PacketPlan
 
 The usage of `EvalPacket()` is to perform `EvalPacket()` for `src_` first, and 
 use the pre-defined `OP` to do the compositional evaluation.
@@ -602,9 +602,9 @@ class PacketPlan<UnaryMapExp<OP, TA, DType, etype>, DType, Arch> {
 };
 ```
 
-### 5.6 MapPacketPlan
+### MapPacketPlan
 
-#### 5.6.1 RValueExp
+#### RValueExp
 
 The `MapPacketPlan()` for `RValueExp` is only to return a `PacketPlan` initiated by the 
 subtype of `RValueExp<T, DType>`, which is always a `Tensor`.
@@ -617,7 +617,7 @@ inline PacketPlan<T, DType, Arch> MakePacketPlan(const RValueExp<T, DType> &e) {
 }
 ```
 
-#### 5.6.2 ScalarExp
+#### ScalarExp
 
 The `MapPacketPlan()` for `ScalarExp` is only to return a `PacketPlan` initiated by the 
 member variable `scalar_`:
@@ -629,7 +629,7 @@ inline PacketPlan<ScalarExp<DType>, DType, Arch> MakePacketPlan(const ScalarExp<
 }
 ```
 
-#### 5.6.3 BinaryMapExp
+#### BinaryMapExp
 
 The `MapPacketPlan()` for `BinaryMapExp` is to recursively called `MapPacketPlan()` for its
 `lhs` and `rhs` at first stage, and then return the `PacketPlan` initiated by the two results.
@@ -648,7 +648,7 @@ MakePacketPlan(const BinaryMapExp<OP, TA, TB, DType, etype> &e) {
 }
 ```
 
-#### 5.6.4 UnaryMapExp
+#### UnaryMapExp
 
 The `MapPacketPlan()` for `UnaryMapExp` is to call `MapPacketPlan()` of its input variable `src`,
 then construct the `PacketPlan` for the return
@@ -661,7 +661,7 @@ MakePacketPlan(const UnaryMapExp<OP, TA, DType, etype> &e) {
 }
 ```
 
-## 6. Packet Check
+## Packet Check
 
 The major usage of `PacketCheck` is to make sure every related `DType` is `float` or `double`,
 and every related `operator` is defined in the context of `Packet`. Otherwise, the program
@@ -716,12 +716,12 @@ struct PacketCheck{
 };
 ```
 
-## 7. Packet Align Check
+## Packet Align Check
 
 `PacketAlignCheck` is to check whether the data is aligned and the expressions
 has been implemented.
 
-### 7.1 Default
+### Default
 
 First, for some expressions that is not implemented, like `TransposeExp()`, the 
 check should automatically fail and return the evaluation of expressions to their 
@@ -736,7 +736,7 @@ struct PacketAlignCheck {
 };
 ```
 
-### 7.2 Tensor
+### Tensor
 
 In the `Check()` function, it checks whether the address is 16-byte aligned, and the `stride_`
 is available for packet (can be divided by `4` for `float`).
@@ -759,7 +759,7 @@ struct PacketAlignCheck<dim, Tensor<cpu, dim, DType>, Arch> {
 };
 ```
 
-### 7.3 ScalarExp
+### ScalarExp
 
 The `ScalarExp` is naturally aligned, so we always return `true`.
 
@@ -772,7 +772,7 @@ struct PacketAlignCheck<dim, ScalarExp<DType>, Arch> {
 };
 ```
 
-### 7.4 BinaryMapExp
+### BinaryMapExp
 
 It first recursively calls `Check()` function of its `lhs` and `rhs`, and combine them 
 by `&&` in the end.
@@ -788,7 +788,7 @@ struct PacketAlignCheck<dim, BinaryMapExp<OP, TA, TB, DType, etype>, Arch> {
 };
 ```
 
-### 7.5 UnaryMapExp
+### UnaryMapExp
 
 It just does `Check()` for its variable `src`
 
@@ -801,7 +801,7 @@ struct PacketAlignCheck<dim, UnaryMapExp<OP, TA, DType, etype>, Arch> {
 };
 ```
 
-## 8. MapPacketPlan
+## MapPacketPlan
 
 `MapPacketPlan` finishes the evaluation and final assignment.
 
