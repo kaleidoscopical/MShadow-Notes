@@ -633,6 +633,250 @@ inline void SetDim(index_t dim) {
 ```
 
 
+## TBlob
+
+Tensor blob class (`TBlob`) that can be used to hold tensor of any dimension,
+any device and any data type.
+This is only a weak type that can be used to transfer data through interface.
+`TBlob` itself do not involve any arithmetic operations,
+but it can be converted to `Tensor` of fixed dimension for further operations.
+
+Like `Tensor`, this data structure is like a pointer class and do not
+implicit allocated, de-allocate space. 
+This data structure can be helpful to hold tensors of different dimensions
+and wait for further processing.
+
+### Member Variables
+
+There are five member variables belonging to `TBlob`.
+
+- `dptr_`: pointer to the data
+- `shape_`: shape of the tensor `TShape`
+- `stride_`: storing the stride information in x dimension
+- `dev_mask_`: device mask of the corresponding device
+- `type_flag_`: typ flag of the tensor blob
+
+```c++
+void *dptr_;
+TShape shape_;
+index_t stride_;
+int dev_mask_;
+int type_flag_;
+```
+
+### Constructor
+
+#### Default Constructor
+
+Default `TBlob` is set with `dptr_` to be `NULL`, `dev_mask_` to be the mask 
+of `cpu`, and `type_flag_` to be the flag of `default_real_t`, which is actually
+`float` type.
+
+```c++
+TBlob(void)
+    : dptr_(NULL), dev_mask_(cpu::kDevMask),
+      type_flag_(DataType<default_real_t>::kFlag) {}
+```
+
+#### Constructor from `TShape`
+
+It constructs `TBlob` from contiguous memory by setting the `stride_` to be the
+highest dimension of `TShape`.
+
+```c++
+template<typename DType>
+TBlob(DType *dptr,
+      const TShape &shape,
+      int dev_mask)
+    : dptr_(dptr), shape_(shape),
+      stride_(shape[shape.ndim() - 1]),
+      dev_mask_(dev_mask),
+      type_flag_(DataType<DType>::kFlag) {}
+```
+
+#### Constructor from `TShape` with type
+
+It constructs `TBlob` from contiguous memory by setting the `stride_` to be the
+highest dimension of `TShape`, and provides a user-defined `type_flag`.
+
+```c++
+TBlob(void *dptr,
+      const TShape &shape,
+      int dev_mask,
+      int type_flag)
+    : dptr_(dptr), shape_(shape),
+      stride_(shape[shape.ndim() - 1]),
+      dev_mask_(dev_mask),
+      type_flag_(type_flag) {}
+```
+
+#### Constructor from `Tensor`
+
+It uses the overloaded assignment operator `=` to construct `TBlob` from `Tensor`. The
+detail of `=` can be referred to following notes.
+
+```c++
+template<typename Device, int dim, typename DType>
+TBlob(const Tensor<Device, dim, DType> &src) {
+  *this = src;
+}
+```
+
+### Overloaded Operators
+
+Only the assignment operator is overloaded in class `TBlob`. The `rhs` should only be 
+the `Tensor` type.
+
+```c++
+template<typename Device, int dim, typename DType>
+inline TBlob
+&operator=(const Tensor<Device, dim, DType> &src) {
+  dptr_ = src.dptr_;
+  shape_ = src.shape_;
+  stride_ = src.stride_;
+  dev_mask_ = Device::kDevMask;
+  type_flag_ = DataType<DType>::kFlag;
+  return *this;
+}
+```
+
+### Member Functions
+
+#### CheckContiguous
+
+It checks whether the `stride_` equals to the highest dimension of `shape_`.
+
+```c++
+inline bool CheckContiguous(void) const {
+  return shape_[shape_.ndim() - 1] == stride_;
+}
+```
+
+#### FlatTo2D
+
+It first checks the consistency of device and type between the desired return `Tensor` and 
+`TBlob` itself. Then, it calls the constructor of `Tensor`.
+
+```c++
+template<typename Device, typename DType>
+inline Tensor<Device, 2, DType> FlatTo2D(Stream<Device> *stream = NULL) const {
+  CHECK(Device::kDevMask == dev_mask_)
+    << "TBlob.get: device type do not match specified type";
+  CHECK(DataType<DType>::kFlag == type_flag_)
+    << "TBlob.get_with_shape: data type do not match specified type."
+    << "Expected: " << type_flag_ << " v.s. given " << DataType<DType>::kFlag;
+  return Tensor<Device, 2, DType>(static_cast<DType*>(dptr_),
+                                  shape_.FlatTo2D(), stride_, stream);
+}
+```
+
+#### ndim
+
+It simply calls the `ndim()` function, which is a member function of its member variable
+`shape_` with type `TShape`.
+
+```c++
+inline int ndim(void) const {
+  return shape_.ndim();
+}
+```
+
+#### size
+
+It returns the size of `i`-th dimension.
+
+```c++
+inline index_t size(index_t idx) const {
+  return shape_[idx];
+}
+```
+
+#### Size
+
+It returns the total number of elements in `Tensor`.
+
+```c++
+inline index_t Size(void) const {
+  return shape_.Size();
+}
+```
+
+#### get
+
+It fetches the tensor, with respect to specific dimension `dim`. if it do not
+match the stored dimension, an error will be issued by the function `get()` of 
+class `TBlob`.
+
+```c++
+template<typename Device, int dim, typename DType>
+inline Tensor<Device, dim, DType> get(Stream<Device> *stream = NULL) const {
+  CHECK(Device::kDevMask == dev_mask_)
+    << "TBlob.get: device type do not match specified type";
+  CHECK(DataType<DType>::kFlag == type_flag_)
+    << "TBlob.get_with_shape: data type do not match specified type."
+    << "Expected: " << type_flag_ << " v.s. given " << DataType<DType>::kFlag;
+  return Tensor<Device, dim, DType>(static_cast<DType*>(dptr_),
+                                     shape_.get<dim>(),
+                                     stride_, stream);
+}
+```
+
+#### get_with_shape
+
+It fetches a tensor in given shape. If size do not match the stored size, 
+an error will be issued. 
+
+It first checks the consistency of device and type between the desired return `Tensor` and 
+`TBlob` itself. Then, it checks whether the `TBlob` is contiguous by comparing the `stride_` 
+to the highest dimension of `shape_`. Moreover, it also compares the sizes of two shapes to 
+make sure the change of shape will not cause memory leak. At last, it calls the constructor 
+of `Tensor` to create a new one according to the given `shape`.
+
+```c++
+template<typename Device, int dim, typename DType>
+inline Tensor<Device, dim, DType> get_with_shape(const Shape<dim> &shape,
+                                                 Stream<Device> *stream = NULL) const {
+  CHECK(Device::kDevMask == dev_mask_)
+    << "TBlob.get: device type do not match specified type";
+  CHECK(DataType<DType>::kFlag == type_flag_)
+    << "TBlob.get_with_shape: data type do not match specified type."
+    << "Expected: " << type_flag_ << " v.s. given " << DataType<DType>::kFlag;
+  CHECK_EQ(this->CheckContiguous(), true) << "TBlob.get_reshape: must be contiguous";
+  CHECK_EQ(this->shape_.Size(), shape.Size())
+    << "TBlob.get_with_shape: new and old shape do not match total elements";
+  return Tensor<Device, dim, DType>(static_cast<DType*>(dptr_),
+                                    shape,
+                                    shape[dim - 1],
+                                    stream);
+}
+```
+
+#### FlatTo3D
+
+It flattens the tensor to `3` dimension by calling its member function `FlatTo3D()`.
+Its first version collapses the dimension before and after specified axis.
+
+```c++
+template<typename Device, typename DType>
+inline Tensor<Device, 3, DType> FlatTo3D(int axis, Stream<Device> *stream = NULL) const {
+  return this->get_with_shape<Device, 3, DType>(
+      this->shape_.FlatTo3D(axis), stream);
+}
+```
+
+Its second version collapses the dimension: `[0, axis_begin)`, `axis_begin, axis_end]`, 
+and `(axis_end, ndim)`.
+
+```c++
+template<typename Device, typename DType>
+inline Tensor<Device, 3, DType> FlatTo3D(int axis_begin, int axis_end,
+  Stream<Device> *stream = NULL) const {
+  return this->get_with_shape<Device, 3, DType>(
+      this->shape_.FlatTo3D(axis_begin, axis_end), stream);
+}
+```
+
+
 ## Missing Explanation
 
 ### Algorithm: `std::fill_n`
