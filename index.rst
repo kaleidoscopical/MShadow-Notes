@@ -15,7 +15,8 @@ Welcome to MShadow-Notes's documentation!
    expr_engine-inl.md
    packet-inl.md
    tensor_blob.md
-
+   parameter.md
+   
 Indices and tables
 ==================
 
